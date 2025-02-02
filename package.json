@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "start": "cross-env NODE_ENV=production node src/index.js",
-    "build":"pip install scikit-learn && pip install joblib && pip install pandas && yarn install && yarn install --prefix frontend && npm run build --prefix frontend",
+    "build":"pip install scikit-learn && pip install joblib && pip install pandas && npm install && npm install --prefix frontend && npm run build --prefix frontend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
