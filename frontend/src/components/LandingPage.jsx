@@ -136,7 +136,7 @@ const LandingPage = () => {
         }}
       >
         <Typography variant="body2">
-          &copy; {new Date().getFullYear()} Navicodes All rights reserved.
+          &copy; {new Date().getFullYear()} Archana All rights reserved.
         </Typography>
       </Box>
     </>
