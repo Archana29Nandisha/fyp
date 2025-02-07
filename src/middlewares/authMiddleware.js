@@ -8,7 +8,7 @@ const verifyToken = (req, res, next) => {
         token = authHeader.split(" ")[1];
 
         if (!token) {
-            return res.status(401).json({ message: `No Token Authorization Denied` });
+            return res.status(401).json({ message: `No Token Authorization Denied, no token` });
         }
 
         try {
