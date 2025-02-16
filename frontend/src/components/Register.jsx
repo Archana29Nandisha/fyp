@@ -7,7 +7,6 @@ function Register() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    role: "",
   });
 
   const handleChange = (e) => {
@@ -53,15 +52,7 @@ function Register() {
             value={formData.password}
             onChange={handleChange}
           />
-          <TextField
-            fullWidth
-            label="Role"
-            name="role"
-            margin="normal"
-            variant="outlined"
-            value={formData.role}
-            onChange={handleChange}
-          />
+
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
             Register
           </Button>
