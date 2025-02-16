@@ -6,7 +6,9 @@ import {
     addProject,
     approveProject,
     addReview,
-    deleteProject
+    deleteProject,
+    getProjectByID,
+    getUser
 } from '../controllers/projectController.js';
 
 const routes = express.Router();
@@ -20,7 +22,9 @@ routes.post('/projects', verifyToken, authorizeRole('admin', 'developer'), addPr
 
 // All users can access these Routes
 routes.get('/projects', verifyToken, authorizeRole('admin', 'developer', 'user'), getProjects);
+routes.get('/:userID', verifyToken, authorizeRole('admin', 'developer', 'user'), getUser);
 routes.post('/reviews', verifyToken, authorizeRole('admin', 'developer', 'user'), addReview);
+routes.get('/projects/:projectId', verifyToken, authorizeRole('admin', 'developer', 'user'), getProjectByID);
 
 // Export as ES Module
 export default routes;
