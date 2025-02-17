@@ -181,7 +181,7 @@ export const addReview = async (req, res) => {
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
-    const pythonProcess = spawn('python3', ['src/controllers/python/script.py', content]);
+    const pythonProcess = spawn('python', ['src/controllers/python/script.py', content]);
 
     let mlOutput = '';
     pythonProcess.stdout.on('data', (data) => {
