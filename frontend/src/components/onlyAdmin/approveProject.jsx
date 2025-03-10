@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Box,
   Typography,
@@ -13,69 +14,144 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  Dialog,
-  DialogTitle,
-  DialogContent,
+  CircularProgress,
 } from "@mui/material";
 
-const ApproveProject = ({
-  approvedProjects,
-  pendingProjects,
-  allProjects,
-  handleApproveProject,
-  handleDeleteProject,
-}) => {
-  const [tabIndex, setTabIndex] = useState(0);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [page, setPage] = useState(0); // Pagination page index
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Rows per page
+const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:7001/api" : "/api";
 
+const ApproveProject = () => {
+  const [tabIndex, setTabIndex] = useState(0);
+  const [approvedProjects, setApprovedProjects] = useState([]);
+  const [pendingProjects, setPendingProjects] = useState([]);
+  const [approvedPage, setApprovedPage] = useState(0);
+  const [pendingPage, setPendingPage] = useState(0);
+  const [approvedTotalPages, setApprovedTotalPages] = useState(1);
+  const [pendingTotalPages, setPendingTotalPages] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch projects from API
+  useEffect(() => {
+    fetchProjects();
+  }, [approvedPage, pendingPage]);
+
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const response = await axios.get(`${API_URL}/user/allprojects`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      const projects = response.data.projects || [];
+      setApprovedProjects(response.data.approvedProjects || []);
+      setPendingProjects(response.data.pendingProjects || []);
+      setApprovedTotalPages(Math.ceil(projects.filter((p) => p.approved).length / rowsPerPage));
+      setPendingTotalPages(Math.ceil(projects.filter((p) => !p.approved).length / rowsPerPage));
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Approve project
+  const handleApproveProject = async (projectId) => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+      await axios.put(`${API_URL}/user/projects/${projectId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      alert("Project approved successfully!");
+      fetchProjects(); // Refresh the project list
+    } catch (error) {
+      console.error("Error approving project:", error);
+    }
+  };
+
+  // Delete project
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm("Are you sure you want to delete this project?")) return;
+
+    try {
+      const authToken = localStorage.getItem("authToken");
+      await axios.delete(`${API_URL}/user/projects/${projectId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      alert("Project deleted successfully!");
+      fetchProjects(); // Refresh the project list
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
+  };
+
+  // Handle tab change
   const handleTabChange = (event, newIndex) => {
     setTabIndex(newIndex);
-    setPage(0); // Reset pagination on tab change
   };
 
+  // Handle page changes
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    if (tabIndex === 0) setApprovedPage(newPage);
+    else setPendingPage(newPage);
   };
 
+  // Handle rows per page change
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setApprovedPage(0);
+    setPendingPage(0);
+    fetchProjects();
   };
 
-  const handleShowDetails = (project) => {
-    setSelectedProject(project);
-  };
-
-  const handleCloseDialog = () => {
-    setSelectedProject(null);
-  };
-
-  const renderTable = (projects) => (
+  // Table rendering function
+  const renderTable = (projects, isPending) => (
     <>
-      <TableContainer component={Paper}>
+      <TableContainer
+        component={Paper}
+        sx={{
+          mt: 3,
+          background: "rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(10px)",
+          borderRadius: 3,
+          color: "#fff",
+        }}
+      >
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>Project Name</TableCell>
-              <TableCell>Actions</TableCell>
+            <TableRow sx={{ background: "#1976d2" }}>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Project Name</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold", textAlign: "center" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {projects
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .slice(
+                isPending ? pendingPage * rowsPerPage : approvedPage * rowsPerPage,
+                isPending ? pendingPage * rowsPerPage + rowsPerPage : approvedPage * rowsPerPage + rowsPerPage
+              )
               .map((project) => (
-                <TableRow key={project._id}>
-                  <TableCell>{project.name}</TableCell>
-                  <TableCell>
-                    {tabIndex === 1 && ( // Pending Approval Tab
+                <TableRow
+                  key={project._id}
+                  sx={{
+                    "&:hover": { background: "rgba(255, 255, 255, 0.2)" },
+                  }}
+                >
+                  <TableCell sx={{ color: "#fff" }}>{project.name}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>
+                    {isPending ? (
                       <Button
                         variant="contained"
                         color="success"
                         onClick={() => handleApproveProject(project._id)}
                       >
                         Approve
+                      </Button>
+                    ) : (
+                      <Button variant="contained" disabled sx={{ background: "#4CAF50", color: "#fff" }}>
+                        Approved
                       </Button>
                     )}
                     <Button
@@ -86,16 +162,6 @@ const ApproveProject = ({
                     >
                       Delete
                     </Button>
-                    {tabIndex === 2 && ( // Show Details in All Projects Tab
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleShowDetails(project)}
-                        sx={{ ml: 2 }}
-                      >
-                        Show
-                      </Button>
-                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -103,11 +169,12 @@ const ApproveProject = ({
         </Table>
       </TableContainer>
       <TablePagination
+        sx={{ color: "#fff", mt: 2 }}
         rowsPerPageOptions={[5, 10, 15]}
         component="div"
-        count={projects.length}
+        count={isPending ? pendingProjects.length : approvedProjects.length}
         rowsPerPage={rowsPerPage}
-        page={page}
+        page={isPending ? pendingPage : approvedPage}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
@@ -115,45 +182,57 @@ const ApproveProject = ({
   );
 
   return (
-    <Box>
-      <Tabs value={tabIndex} onChange={handleTabChange}>
-        <Tab label="Approved Projects" />
-        <Tab label="Pending Approval" />
-        <Tab label="All Projects" />
-      </Tabs>
-      <Box sx={{ mt: 3 }}>
-        {tabIndex === 0 && renderTable(approvedProjects)}
-        {tabIndex === 1 && renderTable(pendingProjects)}
-        {tabIndex === 2 && renderTable(allProjects)}
-      </Box>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #1e3c72, #2a5298, #6a11cb, #2575fc)",
+        color: "#fff",
+        textAlign: "center",
+        py: 6,
+        px: 3,
+      }}
+    >
+      <Box
+        sx={{
+          width: "90%",
+          maxWidth: 800,
+          mx: "auto",
+          background: "rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(10px)",
+          borderRadius: 3,
+          p: 3,
+          boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: "bold", mb: 3 }}>
+          Manage Projects
+        </Typography>
 
-      {/* Dialog for Project Details */}
-      {selectedProject && (
-        <Dialog open onClose={handleCloseDialog}>
-          <DialogTitle>Project Details</DialogTitle>
-          <DialogContent>
-            <Typography variant="h6">
-              Project: {selectedProject.name}
-            </Typography>
-            <Typography variant="body1" sx={{ mt: 2 }}>
-              Positive Reviews:{" "}
-              {
-                selectedProject.reviews.filter(
-                  (review) => review.sentiment === "Positive"
-                ).length
-              }
-            </Typography>
-            <Typography variant="body1">
-              Negative Reviews:{" "}
-              {
-                selectedProject.reviews.filter(
-                  (review) => review.sentiment === "Negative"
-                ).length
-              }
-            </Typography>
-          </DialogContent>
-        </Dialog>
-      )}
+        <Tabs
+          value={tabIndex}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          sx={{
+            background: "rgba(255, 255, 255, 0.15)",
+            borderRadius: 2,
+            "& .MuiTabs-indicator": { backgroundColor: "#21cbf3" },
+            "& .MuiTab-root": { color: "#fff", fontWeight: "bold" },
+            "& .Mui-selected": { color: "#21cbf3" },
+          }}
+        >
+          <Tab label="Approved Projects" />
+          <Tab label="Pending Approval" />
+        </Tabs>
+
+        {loading ? (
+          <CircularProgress sx={{ mt: 3, color: "#fff" }} />
+        ) : (
+          <Box sx={{ mt: 3 }}>
+            {tabIndex === 0 && renderTable(approvedProjects, false)}
+            {tabIndex === 1 && renderTable(pendingProjects, true)}
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };
