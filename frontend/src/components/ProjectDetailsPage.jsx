@@ -8,16 +8,17 @@ import {
   Card,
   CardContent,
   Pagination,
+  CircularProgress,
 } from "@mui/material";
 import axios from "axios";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { styled } from "@mui/system";
+import { motion } from "framer-motion";
 
 const API_URL =
   process.env.NODE_ENV === "development" ? "http://localhost:7001/api" : "/api";
 
 const ProjectDetailsPage = () => {
-  const { projectId } = useParams(); // Get project ID from URL
+  const { projectId } = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [review, setReview] = useState("");
@@ -26,11 +27,12 @@ const ProjectDetailsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [positiveCount, setPositiveCount] = useState(0);
   const [negativeCount, setNegativeCount] = useState(0);
-  const reviewsPerPage = 3; // Number of reviews per page
+  const [loading, setLoading] = useState(true);
+  const reviewsPerPage = 3;
 
-  // Fetch project details and reviews
   useEffect(() => {
     const fetchProjectDetails = async () => {
+      setLoading(true);
       try {
         const authToken = localStorage.getItem("authToken");
         const response = await axios.get(`${API_URL}/user/projects/${projectId}`, {
@@ -39,165 +41,167 @@ const ProjectDetailsPage = () => {
         });
         setProject(response.data.project);
         setTotalPages(response.data.totalPages);
-        setPositiveCount(response.data.positiveCount); // Set total positive reviews
-        setNegativeCount(response.data.negativeCount); // Set total negative reviews
+        setPositiveCount(response.data.positiveCount);
+        setNegativeCount(response.data.negativeCount);
       } catch (error) {
         console.error("Error fetching project details:", error);
         navigate("/");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProjectDetails();
   }, [projectId, currentPage, navigate]);
 
-  // Handle adding a review
   const handleAddReview = async () => {
     try {
       const authToken = localStorage.getItem("authToken");
       await axios.post(
         `${API_URL}/user/reviews`,
         { projectId, content: review },
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
       alert("Review added successfully!");
       setReview("");
-      // Refresh project details to show the new review
-      const response = await axios.get(`${API_URL}/user/projects/${projectId}`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-        params: { page: currentPage, limit: reviewsPerPage },
-      });
-      setProject(response.data.project);
-      setTotalPages(response.data.totalPages);
-      setPositiveCount(response.data.positiveCount); // Update total positive reviews
-      setNegativeCount(response.data.negativeCount); // Update total negative reviews
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error adding review:", error);
     }
   };
 
-  // Sentiment indicator component
-  const SentimentIndicator = styled("div")(({ sentiment }) => ({
-    width: "12px",
-    height: "12px",
-    borderRadius: "50%",
-    backgroundColor: sentiment === "Positive" ? "#4CAF50" : "#F44336", // Green for positive, red for negative
-    display: "inline-block",
-    marginRight: "8px",
-  }));
-
-  // Handle page change for reviews
   const handlePageChange = (event, page) => {
     setCurrentPage(page);
   };
 
-  // Handle going back
   const handleGoBack = () => {
-    navigate(-1); // Go back to the previous page
+    navigate(-1);
   };
 
-  if (!project) {
-    return <Typography>Loading project details...</Typography>;
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #1e3c72, #2a5298, #6a11cb, #2575fc)",
+        }}
+      >
+        <CircularProgress sx={{ color: "#fff" }} />
+      </Box>
+    );
   }
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Button
-        variant="outlined"
-        startIcon={<ArrowBackIcon />}
-        onClick={handleGoBack}
-        sx={{ mb: 3 }}
-      >
-        Back to Projects
-      </Button>
-      <Typography variant="h4" gutterBottom>
-        {project.name}
-      </Typography>
-      <Typography variant="h6" gutterBottom>
-        Location: {project.location}
-      </Typography>
-      <Typography variant="body1" gutterBottom>
-        Developer: {project.developer?.username}
-      </Typography>
-      <Typography variant="body1" gutterBottom>
-        Description: {project.description}
-      </Typography>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #1e3c72, #2a5298, #6a11cb, #2575fc)",
+        color: "#fff",
+        textAlign: "center",
+        py: 6,
+        px: 3,
+      }}
+    >
+      {/* Back Button (Left Corner) */}
+      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={handleGoBack}
+          sx={{
+            position: "absolute",
+            top: "20px",
+            left: "20px",
+            color: "#fff",
+            borderColor: "#fff",
+            "&:hover": { background: "#ffffff30" },
+          }}
+        >
+          Back
+        </Button>
+      </motion.div>
 
-      {/* Reviews Section */}
-      {(role === "admin" || role === "developer") && (
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h5" gutterBottom>
-            Reviews
-          </Typography>
-          {/* Display total positive and negative review counts */}
-          <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-            <Typography variant="body1">
-                <div style={{
-                    width: "12px",
-                    height: "12px",
-                    borderRadius: "50%",
-                    backgroundColor: "#4CAF50", // Green for positive, red for negative
-                    display: "inline-block",
-                    marginRight: "8px",
-                }}/>
-              Total Positive Reviews: <strong>{positiveCount}</strong> |
-            </Typography>
-            <Typography variant="body1">
-            <div style={{
-                    width: "12px",
-                    height: "12px",
-                    borderRadius: "50%",
-                    backgroundColor: "#F44336", // Green for positive, red for negative
-                    display: "inline-block",
-                    marginRight: "8px",
-                }}/>
-              Total Negative Reviews: <strong>{negativeCount}</strong> |
-            </Typography>
-            <Typography variant="body1">
-              Total Reviews: <strong>{negativeCount+positiveCount}</strong>
-            </Typography>
-          </Box>
-          {project.reviews.map((review, index) => (
-            <Card key={index} sx={{ mb: 2 }}>
+      {/* Project Details */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
+        <Typography variant="h4" fontWeight="bold">
+          {project.name}
+        </Typography>
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Location: {project.location}
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 1 }}>
+          Developer: {project.developer?.username}
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 2, maxWidth: 600, mx: "auto" }}>
+          {project.description}
+        </Typography>
+      </motion.div>
+
+      {/* Review Statistics */}
+      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
+        <Box sx={{ display: "flex", gap: 2, justifyContent: "center", mt: 3 }}>
+          <Typography variant="body1" sx={{ color: "#4CAF50" }}>Positive Reviews: <strong>{positiveCount}</strong></Typography>
+          <Typography variant="body1" sx={{ color: "#F44336" }}>Negative Reviews: <strong>{negativeCount}</strong></Typography>
+          <Typography variant="body1">Total Reviews: <strong>{positiveCount + negativeCount}</strong></Typography>
+        </Box>
+      </motion.div>
+
+      {/* Reviews List (Single Row) */}
+      <Box
+        sx={{
+          mt: 4,
+          display: "flex",
+          overflowX: "auto",
+          gap: 2,
+          paddingBottom: 2,
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" },
+        }}
+      >
+        {project.reviews.map((review, index) => (
+          <motion.div key={index} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: index * 0.2 }}>
+            <Card
+              sx={{
+                minWidth: 280,
+                borderRadius: 3,
+                background: "rgba(255, 255, 255, 0.15)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                color: "#fff",
+              }}
+            >
               <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <SentimentIndicator sentiment={review.sentiment} />
-                  <Typography variant="body1">{review.content}</Typography>
-                </Box>
-                <Typography variant="caption">
-                  By: {review.user?.username} on{" "}
-                  {new Date(review.createdAt).toLocaleDateString()}
+                <Typography variant="body1">{review.content}</Typography>
+                <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                  By {review.user?.username} on {new Date(review.createdAt).toLocaleDateString()}
                 </Typography>
               </CardContent>
             </Card>
-          ))}
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={handlePageChange}
-              color="primary"
-            />
-          </Box>
-        </Box>
-      )}
+          </motion.div>
+        ))}
+      </Box>
+
+      {/* Pagination */}
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+        <Pagination count={totalPages} page={currentPage} onChange={handlePageChange} color="primary" />
+      </Box>
 
       {/* Add Review Section */}
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Add a Review
-        </Typography>
+        <Typography variant="h5">Add a Review</Typography>
         <TextField
           fullWidth
           label="Your Review"
           multiline
-          rows={4}
+          rows={3}
           value={review}
           onChange={(e) => setReview(e.target.value)}
-          sx={{ mb: 2 }}
+          sx={{ mt: 2, background: "#ffffff30", borderRadius: 2, input: { color: "#fff" }, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#fff" } }}
         />
-        <Button variant="contained" onClick={handleAddReview}>
+        <Button variant="contained" onClick={handleAddReview} sx={{ mt: 2, background: "#21cbf3" }}>
           Submit Review
         </Button>
       </Box>
