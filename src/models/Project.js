@@ -35,6 +35,10 @@ const projectSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Project description is required'],
   },
+  mapLocation:{
+    type: String,
+    required: [true, 'Map location is required'],
+  },
   location: {
     type: String,
     required: [true, 'Location is required'],
@@ -53,6 +57,10 @@ const projectSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User',
     required: [true, 'Developer reference is required']
+  },
+  image: {
+    type: String, 
+    required: false, 
   },
   reviews: [reviewSchema],
   createdAt: {
