@@ -1,5 +1,23 @@
 import { spawn } from 'child_process';
 import Project from '../models/Project.js';
+import multer from "multer";
+import path from "path";
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "./src/uploads/"); // Ensure 'uploads' folder exists in root directory
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage }); // Now `storage` is properly defined
 
 export const getProjects = async (req, res) => {
   try {
@@ -86,10 +104,11 @@ export const getProjectByID = async (req,res)=>{
 
 export const addProject = async (req, res) => {
   try {
-    const { name, description, location } = req.body;
+    const { name, description, location ,mapLocation} = req.body;
+    const image = req.file ? `/uploads/${req.file.filename}` : null; // Store image path
 
     // Validate required fields
-    if (!name || !description || !location) {
+    if (!name || !description || !location || !image || !mapLocation) {
       return res.status(400).json({ message: "All fields are required: name, description, location" });
     }
 
@@ -114,12 +133,16 @@ export const addProject = async (req, res) => {
 
     // Get the authenticated user's ID (assuming it's stored in req.user)
     const developer = req.user.id;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const cleanedmapLocation = mapLocation.replace(/\sstyle=(["']).*?\1/gi, '');
 
     // Create the new project
     const project = new Project({
       name,
       description,
       location,
+      image: imageUrl,
+      mapLocation:cleanedmapLocation,
       developer, // Associate the project with the authenticated user
       approved: false, // Default to false for new projects
       reviews: [], // Initialize with an empty reviews array
@@ -209,14 +232,32 @@ export const addReview = async (req, res) => {
 export const deleteProject = async (req, res) => {
   try {
     const projectId = req.params.id;
+
+    // Find the project
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
+
+    // Check if the project has an associated image
+    if (project.image) {
+      const imagePath = path.join(__dirname, '../', project.image);
+
+      // Delete the image from the server
+      fs.unlink(imagePath, (err) => {
+        if (err && err.code !== 'ENOENT') {
+          console.error("Error deleting image:", err);
+        }
+      });
+    }
+
+    // Delete the project from the database
     await Project.findByIdAndDelete(projectId);
-    res.status(200).json({ message: 'Project deleted successfully' });
+
+    res.status(200).json({ message: 'Project and associated image deleted successfully' });
+
   } catch (err) {
-    console.error(err);
+    console.error("Error deleting project:", err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -231,3 +272,68 @@ export const getUser=async(req,res)=>{
     res.status(500).json({ message: 'Internal server error' });
   }
 }
+
+export const getAllProjects = async (req, res) => {
+  try {
+    const { page = 1, limit = 5, location } = req.query;
+
+    const query = {}; // Fetch all projects (approved and pending)
+    if (location) {
+      query.location = location;
+    }
+
+    // Count total approved and pending projects
+    const totalApproved = await Project.countDocuments({ ...query, approved: true });
+    const totalPending = await Project.countDocuments({ ...query, approved: false });
+
+    // ✅ Fetch all approved projects (NO PAGINATION)
+    const approvedProjects = await Project.find({ ...query, approved: true })
+      .populate("developer", "username")
+      .sort({ createdAt: -1 });
+
+    // ✅ Fetch paginated pending projects
+    const pendingProjects = await Project.find({ ...query, approved: false })
+      .populate("developer", "username")
+      .skip((page - 1) * limit) // Pagination Logic
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      approvedProjects, // ✅ Shows all approved projects
+      pendingProjects, // ✅ Shows paginated pending projects
+      totalPendingPages: Math.ceil(totalPending / limit),
+      currentPendingPage: parseInt(page),
+      totalApproved,
+      totalPending,
+    });
+  }catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getfullProjects = async (req, res) => {
+  try {
+    const { page = 1, limit = 5 } = req.query;
+  
+    // Count total projects
+    const totalProjects = await Project.countDocuments();
+  
+    // Fetch projects with pagination
+    const projects = await Project.find()
+      .populate("developer", "username")
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+  
+    res.status(200).json({
+      projects,
+      totalPages: Math.ceil(totalProjects / limit),
+      currentPage: parseInt(page),
+      totalProjects,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
