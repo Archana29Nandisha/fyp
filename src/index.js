@@ -24,6 +24,7 @@ app.use("/api/user", userRoutes);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontendBuildPath = path.join(__dirname, '../frontend/build');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve frontend in production mode
 if (process.env.NODE_ENV === 'production') {
