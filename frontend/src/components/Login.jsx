@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { TextField, Button, Typography, Container, Box } from "@mui/material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+
 const API_URL =
   process.env.NODE_ENV === "development" ? "http://localhost:7001/api" : "/api";
+
 function Login() {
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({ username: "", password: "" });
 
   const handleChange = (e) => {
@@ -17,18 +19,12 @@ function Login() {
     e.preventDefault();
     try {
       const response = await axios.post(`${API_URL}/auth/login`, formData);
-
-      // Destructure token from the response data
       const { token, role } = response.data;
 
-      // Save the token securely in localStorage
       if (token) {
         localStorage.setItem("authToken", token);
         localStorage.setItem("userRole", role);
-
-        // Set token as default header for future Axios requests
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
         alert("Login successful!");
         navigate("/dashboard");
       } else {
@@ -44,39 +40,83 @@ function Login() {
   };
 
   return (
-    <Container maxWidth="xs">
-      <Box
-        sx={{ mt: 8, p: 3, borderRadius: 2, boxShadow: 3, textAlign: "center" }}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "linear-gradient(135deg, #1e3c72, #2a5298, #6a11cb, #2575fc)",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1 }}
       >
-        <Typography variant="h5" gutterBottom>
-          Login
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Username"
-            name="username"
-            margin="normal"
-            variant="outlined"
-            value={formData.username}
-            onChange={handleChange}
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            name="password"
-            type="password"
-            margin="normal"
-            variant="outlined"
-            value={formData.password}
-            onChange={handleChange}
-          />
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
-            Login
-          </Button>
-        </form>
-      </Box>
-    </Container>
+        <Container maxWidth="xs">
+          <Box
+            sx={{
+              p: 4,
+              borderRadius: 3,
+              background: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 4px 30px rgba(0, 0, 0, 0.2)",
+              color: "#fff",
+              textAlign: "center",
+            }}
+          >
+            <Typography variant="h4" gutterBottom>
+              Login
+            </Typography>
+            <form onSubmit={handleSubmit}>
+              <TextField
+                fullWidth
+                label="Username"
+                name="username"
+                margin="normal"
+                variant="outlined"
+                value={formData.username}
+                onChange={handleChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "rgba(255,255,255,0.7)" },
+                    "&:hover fieldset": { borderColor: "#fff" },
+                    "&.Mui-focused fieldset": { borderColor: "#fff" },
+                  },
+                  input: { color: "#fff" },
+                  label: { color: "#fff" },
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Password"
+                name="password"
+                type="password"
+                margin="normal"
+                variant="outlined"
+                value={formData.password}
+                onChange={handleChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "rgba(255,255,255,0.7)" },
+                    "&:hover fieldset": { borderColor: "#fff" },
+                    "&.Mui-focused fieldset": { borderColor: "#fff" },
+                  },
+                  input: { color: "#fff" },
+                  label: { color: "#fff" },
+                }}
+              />
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, background: "#21cbf3" }}>
+                  Login
+                </Button>
+              </motion.div>
+            </form>
+          </Box>
+        </Container>
+      </motion.div>
+    </Box>
   );
 }
 
