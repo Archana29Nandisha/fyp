@@ -1,6 +1,5 @@
 import React from "react";
-import { Container, Typography, Box, Grid, Card, CardContent, CardMedia, Button } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Container, Typography, Box, Grid, Card, CardContent, CardMedia } from "@mui/material";
 import { motion } from "framer-motion";
 
 const projects = [
@@ -8,13 +7,13 @@ const projects = [
     id: 1,
     title: "AI-Based Review Analyzer",
     description: "An AI-powered system that analyzes customer reviews and provides sentiment insights.",
-    image: "https://source.unsplash.com/600x400/?technology,ai",
+    image:"/images/freepik__aibased-review-analyzer__91652.jpg",
   },
   {
     id: 2,
     title: "Urban Development Feedback System",
     description: "A crowdsourced platform for urban planning feedback with NLP-based sentiment analysis.",
-    image: "https://source.unsplash.com/600x400/?city,urban",
+    image: "/images/freepik__the-style-is-candid-image-photography-with-natural__91653.jpeg",
   },
 ];
 
@@ -32,15 +31,16 @@ const HomePage = () => {
         textAlign: "center",
       }}
     >
+      
       {/* Introduction Section */}
       <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
         <Typography variant="h3" fontWeight="bold" gutterBottom>
-          Welcome to Our Project
+          Welcome
         </Typography>
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.3 }}>
         <Typography variant="h6" color="rgba(255, 255, 255, 0.8)" sx={{ mb: 4, maxWidth: 700 }}>
-          We provide AI-powered insights and feedback mechanisms to enhance project efficiency and decision-making.
+          We collect your valuable feedback to increase our projects.
         </Typography>
       </motion.div>
 
@@ -68,14 +68,6 @@ const HomePage = () => {
                     <Typography variant="body2" color="rgba(255, 255, 255, 0.8)" sx={{ mt: 1 }}>
                       {project.description}
                     </Typography>
-                    <Button
-                      variant="contained"
-                      sx={{ mt: 2, background: "#21cbf3" }}
-                      component={Link}
-                      to={`/projects/${project.id}`}
-                    >
-                      Learn More
-                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -90,9 +82,6 @@ const HomePage = () => {
           <Typography variant="h5" gutterBottom>
             Want to explore more?
           </Typography>
-          <Button variant="contained" color="primary" component={Link} to="/projects">
-            View All Projects
-          </Button>
         </Box>
       </motion.div>
     </Box>

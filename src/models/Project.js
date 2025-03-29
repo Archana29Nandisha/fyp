@@ -39,6 +39,10 @@ const projectSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Map location is required'],
   },
+  proposedUse: {type:String},
+  footprint: {type:String},
+  proposedBuilding: {type:String},
+  totalInvestment:{type:String},
   location: {
     type: String,
     required: [true, 'Location is required'],

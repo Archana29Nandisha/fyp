@@ -63,7 +63,7 @@ export const getProjectByID = async (req,res)=>{
     // Fetch the project and populate developer details
     const project = await Project.findById(projectId)
       .populate("developer", "username") // Populate developer details
-      .populate("reviews.user", "username"); // Populate user details for reviews
+      .populate("reviews.user", "username profileImage") // Populate user details for reviews
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
@@ -104,7 +104,8 @@ export const getProjectByID = async (req,res)=>{
 
 export const addProject = async (req, res) => {
   try {
-    const { name, description, location ,mapLocation} = req.body;
+    const { name, description, location, mapLocation, proposedUse, footprint, proposedBuilding, totalInvestment } = req.body;
+
     const image = req.file ? `/uploads/${req.file.filename}` : null; // Store image path
 
     // Validate required fields
@@ -145,6 +146,10 @@ export const addProject = async (req, res) => {
       mapLocation:cleanedmapLocation,
       developer, // Associate the project with the authenticated user
       approved: false, // Default to false for new projects
+      proposedUse,
+      footprint,
+      proposedBuilding,
+      totalInvestment,
       reviews: [], // Initialize with an empty reviews array
     });
 
@@ -200,6 +205,7 @@ export const approveProject = async (req, res) => {
 export const addReview = async (req, res) => {
   try {
     const { projectId, content } = req.body;
+    console.log("first")
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });

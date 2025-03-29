@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { TextField, Button, Typography, Container, Box } from "@mui/material";
 import axios from "axios";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const API_URL =
   process.env.NODE_ENV === "development" ? "http://localhost:7001/api" : "/api";
@@ -94,8 +95,13 @@ function Register() {
                 }}
               />
               <motion.div whileHover={{ scale: 1.05 }}>
-                <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, background: "#21cbf3" }}>
+                <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, background: "#7b1fa2" }}>
                   Register
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Button type="button" fullWidth variant="contained"  component={Link} to="/login" sx={{ mt: 3, background: "#21cbf3" }}>
+                  Login
                 </Button>
               </motion.div>
             </form>

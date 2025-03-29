@@ -9,6 +9,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Grid,
 } from "@mui/material";
 
 const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:7001/api" : "/api";
@@ -27,7 +28,11 @@ const AddProject = ({ fetchProjects }) => {
     description: "",
     location: "",
     image: null,
-    mapLocation:""
+    mapLocation: "",
+    proposedUse: "",
+    footprint: "",
+    proposedBuilding: "",
+    totalInvestment: ""
   });
 
   const [previewImage, setPreviewImage] = useState(null);
@@ -56,7 +61,9 @@ const AddProject = ({ fetchProjects }) => {
 
   // Function to Add Project via API
   const handleAddProject = async () => {
-    if (!newProject.name || !newProject.description || !newProject.location || !newProject.image || !newProject.mapLocation)  {
+    if (!newProject.name || !newProject.description || !newProject.location || !newProject.image || 
+        !newProject.mapLocation || !newProject.proposedUse || !newProject.footprint || 
+        !newProject.proposedBuilding || !newProject.totalInvestment)  {
       alert("All fields including an image are required!");
       return;
     }
@@ -64,23 +71,24 @@ const AddProject = ({ fetchProjects }) => {
     try {
       const authToken = localStorage.getItem("authToken");
       const formData = new FormData();
-      formData.append("name", newProject.name);
-      formData.append("description", newProject.description);
-      formData.append("location", newProject.location);
-      formData.append("image", newProject.image); // Append the image file
-      formData.append("mapLocation", newProject.mapLocation); 
+      Object.keys(newProject).forEach(key => {
+        formData.append(key, newProject[key]);
+      });
 
       await axios.post(`${API_URL}/user/projects`, formData, {
         headers: {
           Authorization: `Bearer ${authToken}`,
-          "Content-Type": "multipart/form-data", // Ensure proper handling of files
+          "Content-Type": "multipart/form-data",
         },
       });
 
       alert("Project added successfully!");
-      setNewProject({ name: "", description: "", location: "", image: null });
+      setNewProject({
+        name: "", description: "", location: "", image: null, mapLocation: "",
+        proposedUse: "", footprint: "", proposedBuilding: "", totalInvestment: ""
+      });
       setPreviewImage(null);
-      fetchProjects(); // Refresh projects list
+      fetchProjects();
     } catch (error) {
       console.error("Error adding project:", error);
       alert("Failed to add project. Please try again.");
@@ -103,9 +111,9 @@ const AddProject = ({ fetchProjects }) => {
       <Box
         sx={{
           width: "100%",
-          maxWidth: 500,
+          maxWidth: 700,
           background: "rgba(255, 255, 255, 0.1)",
-          backdropFilter: "blur(10px)",
+          backdropFilter: "blur(12px)",
           borderRadius: "12px",
           boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.2)",
           p: 4,
@@ -116,105 +124,288 @@ const AddProject = ({ fetchProjects }) => {
           Add New Project
         </Typography>
 
-        <TextField
-          fullWidth
-          label="Project Name"
-          name="name"
-          value={newProject.name}
-          onChange={handleChange}
-          margin="normal"
-          required
-          InputProps={{
-            sx: {
-              color: "#fff",
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#fff" },
-            },
-          }}
-          InputLabelProps={{ sx: { color: "#fff" } }}
-        />
+        <Grid container spacing={2} style={{ color: "#fff" }}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Project Name"
+              name="name"
+              value={newProject.name}
+              onChange={handleChange}
+              required
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  color: "#fff",
+                  "&.Mui-focused": {
+                    color: "#fff",
+                  },
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Description"
+              name="description"
+              value={newProject.description}
+              onChange={handleChange}
+              multiline
+              rows={4}
+              required
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  color: "#fff",
+                  "&.Mui-focused": {
+                    color: "#fff",
+                  },
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Map Location (Paste Google Map Embed HTML)"
+              name="mapLocation"
+              value={newProject.mapLocation}
+              onChange={handleChange}
+              multiline
+              rows={3}
+              required
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  color: "#fff",
+                  "&.Mui-focused": {
+                    color: "#fff",
+                  },
+                },
+              }}
+            />
+          </Grid>
 
-        <TextField
-          fullWidth
-          label="Description"
-          name="description"
-          value={newProject.description}
-          onChange={handleChange}
-          margin="normal"
-          multiline
-          rows={4}
-          required
-          InputProps={{
-            sx: {
-              color: "#fff",
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#fff" },
-            },
-          }}
-          InputLabelProps={{ sx: { color: "#fff" } }}
-        />
-  <TextField
-          fullWidth
-          label="Map Location(Open google map and go to share and select embeded a map and copy html and paste it here)"
-          name="mapLocation"
-          value={newProject.mapLocation}
-          onChange={handleChange}
-          margin="normal"
-          multiline
-          rows={4}
-          required
-          InputProps={{
-            sx: {
-              color: "#fff",
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#fff" },
-            },
-          }}
-          InputLabelProps={{ sx: { color: "#fff" } }}
-        />
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Proposed Use"
+              name="proposedUse"
+              value={newProject.proposedUse}
+              onChange={handleChange}
+              required
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  color: "#fff",
+                  "&.Mui-focused": {
+                    color: "#fff",
+                  },
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Footprint"
+              name="footprint"
+              value={newProject.footprint}
+              onChange={handleChange}
+              required
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  color: "#fff",
+                  "&.Mui-focused": {
+                    color: "#fff",
+                  },
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Proposed Building"
+              name="proposedBuilding"
+              value={newProject.proposedBuilding}
+              onChange={handleChange}
+              required
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  color: "#fff",
+                  "&.Mui-focused": {
+                    color: "#fff",
+                  },
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Total Investment"
+              name="totalInvestment"
+              value={newProject.totalInvestment}
+              onChange={handleChange}
+              required
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  color: "#fff",
+                  "&.Mui-focused": {
+                    color: "#fff",
+                  },
+                },
+              }}
+            />
+          </Grid>
 
-        <FormControl fullWidth margin="normal" required>
-          <InputLabel sx={{ color: "#fff" }}>Location</InputLabel>
-          <Select
-            name="location"
-            value={newProject.location}
-            onChange={handleChange}
-            sx={{
-              background: "rgba(255, 255, 255, 0.1)",
-              color: "#fff",
-              borderRadius: 2,
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#fff" },
-            }}
-          >
-            {districts.map(district => (
-              <MenuItem key={district} value={district}>
-                {district}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          <Grid item xs={12}>
+            <FormControl fullWidth required>
+              <InputLabel style={{ color: "#fff" }}>Location</InputLabel>
+              <Select
+                name="location"
+                value={newProject.location}
+                onChange={handleChange}
+                sx={{
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#fff",
+                  },
+                }}
+              >
+                {districts.map(district => (
+                  <MenuItem key={district} value={district}>
+                    {district}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-        {/* Image Upload Section */}
-        <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} id="upload-image" />
-        <label htmlFor="upload-image">
-          <Button variant="contained" component="span" sx={{ mt: 2, background: "#21cbf3" }}>
-            Upload Project Image
-          </Button>
-        </label>
 
-        {/* Image Preview */}
-        {previewImage && (
-          <Box sx={{ mt: 2, textAlign: "center" }}>
-            <img src={previewImage} alt="Preview" style={{ maxWidth: "100%", borderRadius: 8 }} />
-          </Box>
-        )}
+          <Grid item xs={12}>
+            <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} id="upload-image" />
+            <label htmlFor="upload-image">
+              <Button variant="contained" component="span" sx={{ width: "100%", mt: 2, background: "#21cbf3" }}>
+                Upload Project Image
+              </Button>
+            </label>
+          </Grid>
 
-        <Button
-          variant="contained"
-          fullWidth
-          sx={{ mt: 3, py: 1.5, fontWeight: "bold", background: "#21cbf3" }}
-          onClick={handleAddProject}
-          disabled={!newProject.name || !newProject.description || !newProject.location || !newProject.image}
-        >
-          Submit Project
-        </Button>
+          {previewImage && (
+            <Grid item xs={12} sx={{ textAlign: "center" }}>
+              <img src={previewImage} alt="Preview" style={{ maxWidth: "100%", borderRadius: 8 }} />
+            </Grid>
+          )}
+
+          <Grid item xs={12}>
+            <Button variant="contained" fullWidth sx={{ mt: 3, py: 1.5, fontWeight: "bold", background: "#21cbf3" }} onClick={handleAddProject}>
+              Submit Project
+            </Button>
+          </Grid>
+        </Grid>
       </Box>
     </Box>
   );
